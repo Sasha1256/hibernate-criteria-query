@@ -41,21 +41,23 @@ public class PhoneDaoImpl extends AbstractDao implements PhoneDao {
 
     @Override
     public List<Phone> findAll(Map<String, String[]> params) {
-
-        CriteriaBuilder criteriaBuilder = factory.getCriteriaBuilder();
-        CriteriaQuery<Phone> criteriaQuery = criteriaBuilder.createQuery(Phone.class);
-        Root<Phone> phoneRoot = criteriaQuery.from(Phone.class);
-        Predicate statement = null;
-        for (Map.Entry<String, String[]> entry : params.entrySet()) {
-            String key = entry.getKey();
-            String[] value = entry.getValue();
-            CriteriaBuilder.In<Object> in = criteriaBuilder.in(phoneRoot.get(key));
-            for (String s : value) {
-                in.value(s);
+        try (Session session = factory.openSession()) {
+            CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
+            CriteriaQuery<Phone> criteriaQuery = criteriaBuilder.createQuery(Phone.class);
+            Root<Phone> phoneRoot = criteriaQuery.from(Phone.class);
+            for (Map.Entry<String, String[]> entry : params.entrySet()) {
+                String key = entry.getKey();
+                String[] value = entry.getValue();
+                Phone.class.getDeclaredField(key);
+                CriteriaBuilder.In<Object> in = criteriaBuilder.in(phoneRoot.get(key));
+                for (String s : value) {
+                    in.value(s);
+                }
+                criteriaQuery.where(criteriaBuilder.and(in));
             }
-            statement = criteriaBuilder.and(in);
+            return session.createQuery(criteriaQuery).getResultList();
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("Could not find Phone by ID", e);
         }
-        criteriaQuery.where(statement);
-        return factory.openSession().createQuery(criteriaQuery).getResultList();
     }
 }
