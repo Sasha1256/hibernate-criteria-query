@@ -1,5 +1,6 @@
 package ma.hibernate.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,19 +46,24 @@ public class PhoneDaoImpl extends AbstractDao implements PhoneDao {
             CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
             CriteriaQuery<Phone> criteriaQuery = criteriaBuilder.createQuery(Phone.class);
             Root<Phone> phoneRoot = criteriaQuery.from(Phone.class);
+            List<Predicate> predicateList = new ArrayList<>();
             for (Map.Entry<String, String[]> entry : params.entrySet()) {
                 String key = entry.getKey();
                 String[] value = entry.getValue();
-                Phone.class.getDeclaredField(key);
+                try {
+                    Phone.class.getDeclaredField(key);
+                } catch (NoSuchFieldException e) {
+                    continue;
+                }
                 CriteriaBuilder.In<Object> in = criteriaBuilder.in(phoneRoot.get(key));
                 for (String s : value) {
-                    in.value(s);
+                    in.value(String.valueOf(s));
                 }
-                criteriaQuery.where(criteriaBuilder.and(in));
+                predicateList.add(in);
             }
+            Predicate predicate = criteriaBuilder.and(predicateList.toArray(new Predicate[predicateList.size()]));
+            criteriaQuery.where(predicate);
             return session.createQuery(criteriaQuery).getResultList();
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException("Could not find Phone by ID", e);
         }
     }
 }
