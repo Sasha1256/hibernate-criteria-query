@@ -60,8 +60,8 @@ public class PhoneDaoImpl extends AbstractDao implements PhoneDao {
                 }
                 predicateList.add(in);
             }
-            Predicate predicate = criteriaBuilder.and(predicateList.toArray
-                    (new Predicate[predicateList.size()]));
+            Predicate predicate = criteriaBuilder.and(predicateList.toArray(
+                    new Predicate[predicateList.size()]));
             criteriaQuery.where(predicate);
             return session.createQuery(criteriaQuery).getResultList();
         }
